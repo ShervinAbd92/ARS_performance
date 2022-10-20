@@ -69,16 +69,17 @@ def main():
     main_pk = getattr(args,"pk")
     
     done_response = get_children_response(main_pk)
-    print("the following tools retunred Done status: {}".format(done_response))
-
     result_response, infores_count_list = get_returned_result_edges(done_response)
-    print("the following tools retuned results: {}".format(result_response))
+
 
     final_infores_count=Counter()
     for infores in infores_count_list:
         final_infores_count.update(infores)
     
-    print(dict(final_infores_count))
+    
+    sort= sorted(final_infores_count.items(), key=lambda x:x[1],reverse=True)
+    for entry in sort:
+        print(entry[0]+" "+str(entry[1]))
     
 
 if __name__== '__main__':
