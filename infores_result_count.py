@@ -20,7 +20,7 @@ def get_children_response(main_pk):
     for child in parent_rj['children']:
         if child['status'] == 'Done':
             done_response[child['actor']['inforesid']]= child['message'] 
-
+    #print(done_response)
     return done_response
 
 def get_returned_result_edges(done_response):
@@ -32,7 +32,9 @@ def get_returned_result_edges(done_response):
         url=f"https://ars-prod.transltr.io/ars/api/messages/{pk}"
         r = requests.get(url)
         child_rj = r.json()
-        if len(child_rj['fields']['data']['message']['results']) != 0:
+        if child_rj['fields']['data']['message']['results'] is None: 
+            pass
+        elif len(child_rj['fields']['data']['message']['results']) != 0 :
             result_response[infores]=pk
             #edge_binding
             for result in child_rj['fields']['data']['message']['results']:
