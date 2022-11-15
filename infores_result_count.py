@@ -31,8 +31,8 @@ def get_returned_result_edges(done_response):
         edge_list=[]
         url=f"https://ars-prod.transltr.io/ars/api/messages/{pk}"
         r = requests.get(url)
-        child_rj = r.json()
-        if child_rj['fields']['data']['message']['results'] is None: 
+        child_rj = r.json() 
+        if len(child_rj['fields']['data']['message']) == 0 or child_rj['fields']['data']['message']['results'] is None:
             pass
         elif len(child_rj['fields']['data']['message']['results']) != 0 :
             result_response[infores]=pk
