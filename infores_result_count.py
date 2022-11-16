@@ -20,20 +20,19 @@ def get_children_response(main_pk):
     for child in parent_rj['children']:
         if child['status'] == 'Done':
             done_response[child['actor']['inforesid']]= child['message'] 
-    #print(done_response)
     return done_response
 
 def get_returned_result_edges(done_response):
 
     result_response={}
-    infores_count_list=[]
+    final_infores_count_list=[]
     for infores, pk in done_response.items():
         edge_list=[]
         url=f"https://ars-prod.transltr.io/ars/api/messages/{pk}"
         r = requests.get(url)
         child_rj = r.json() 
         if len(child_rj['fields']['data']['message']) == 0 or child_rj['fields']['data']['message']['results'] is None:
-            pass
+            continue
         elif len(child_rj['fields']['data']['message']['results']) != 0 :
             result_response[infores]=pk
             #edge_binding
@@ -48,19 +47,42 @@ def get_returned_result_edges(done_response):
             kg_edge=child_rj['fields']['data']['message']['knowledge_graph']['edges']
             infores_count={}
             for edge in unique_edge_id:
-                for key,values in kg_edge.items():
-                    if edge == key:
-                        for val in values['attributes']:
-                            if 'attribute_source' in val:
-                                if val['attribute_source'] is not None:
-                                    infores = val['attribute_source'].split(':')[1]
-                                    infores_count[infores] = infores_count.get(infores,0) + 1
+                values = kg_edge.get(edge)
+                if infores == 'infores:biothings-explorer':
+                    for val in values['attributes']:
+                        if isinstance(val['value'], int) or isinstance(val['value'], float):
+                           continue
+                        else:
+                            if len(val['value'])==1:
+                                value_string = str(val['value'][0])
+                            elif isinstance(val['value'],str):
+                                value_string=val['value']
                             else:
-                                pass  
+                                value_string=val['value']
+                                continue
 
-            infores_count_list.append(infores_count)                        
-            
-    return result_response, infores_count_list
+                            if value_string.startswith('infores'):
+                                infores_id = value_string.split(':')[1]
+
+                                infores_count[infores_id] = infores_count.get(infores_id,0) + 1
+
+                        if 'attribute_source' in val:
+                            if val['attribute_source'] is not None:
+                                infores_id = val['attribute_source'].split(':')[1]
+                                infores_count[infores_id] = infores_count.get(infores_id,0) + 1
+                            else:
+                                pass
+                else:
+                    for val in values['attributes']:
+                        if 'attribute_source' in val:
+                            if val['attribute_source'] is not None:
+                                infores_id = val['attribute_source'].split(':')[1]
+                                infores_count[infores_id] = infores_count.get(infores_id,0) + 1
+                        else:
+                            pass
+            final_infores_count_list.append(infores_count)
+
+    return result_response, final_infores_count_list
 
 
 
@@ -72,7 +94,6 @@ def main():
     
     done_response = get_children_response(main_pk)
     result_response, infores_count_list = get_returned_result_edges(done_response)
-
 
     final_infores_count=Counter()
     for infores in infores_count_list:
