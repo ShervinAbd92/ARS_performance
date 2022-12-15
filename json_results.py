@@ -12,6 +12,7 @@ def get_result_file(pk_list):
         r = requests.get(url)
         parent_rj = r.json()
         with open(f'{pk}.json', "w") as outfile:
+            result_list = []
             for child in parent_rj['children']:
                 child_pk=child['message']
                 url=f"https://ars-prod.transltr.io/ars/api/messages/{child_pk}"
@@ -22,10 +23,9 @@ def get_result_file(pk_list):
                     print(f'HTTP error occurred: {http_err}')
                 except JSONDecodeError:
                     print('Response could not be serialized')  
-                
-                json.dump(child_rj, outfile, indent=4) 
-                outfile.write('\n')
 
+                result_list.append(child_rj)
+            json.dump(result_list, outfile, indent=4) 
 
 
 def main():
